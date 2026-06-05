@@ -1,1 +1,393 @@
-dhdofbfid
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.3/3 Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+            background: transparent; /* โปร่งแสงเพื่อให้เข้ากับวิดเจ็ตหน้าจอหลัก */
+            padding: 8px;
+            width: 100%;
+            max-width: 360px; /* ขนาดกะทัดรัดพอดี Widget 4x2 หรือ 4x3 */
+            margin: 0 auto;
+        }
+        /* การ์ดหลักสไตล์กระจกหรูหราตาแตก */
+        .widget-card {
+            background: rgba(24, 28, 41, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 14px;
+            color: #ffffff;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        /* แถบหัวเรื่องแสดงสถานะวันและเวลาปัจจุบัน */
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+        /* พื้นที่แสดงผลแบ่งเป็น ซ้าย (คาบปัจจุบัน) และ ขวา (คาบถัดไป) */
+        .widget-body {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+        /* ฝั่งซ้าย: คาบปัจจุบัน (เน้นเด่นชัด อ่านง่าย) */
+        .current-class {
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .badge {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            width: fit-content;
+            font-weight: bold;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .subject-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+            margin-bottom: 2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .sub-code {
+            font-size: 0.75rem;
+            color: #a78bfa;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .meta-info {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        /* ฝั่งขวา: ตัวนับเวลาถอยหลัง และข้อมูลคาบถัดไป (เล็กกะทัดรัด ไม่แย่งซีน) */
+        .side-panel {
+            flex: 0.9;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .countdown-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 8px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .countdown-label {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+        .countdown-timer {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #00ff88;
+            font-variant-numeric: tabular-nums;
+        }
+        .next-class-box {
+            font-size: 0.7rem;
+        }
+        .next-label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+        }
+        .next-name {
+            font-weight: 600;
+            color: #38bdf8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 130px;
+        }
+        .next-time {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-card">
+    <div class="widget-header">
+        <div class="header-left">
+            <div class="live-dot"></div>
+            <span id="current-day-txt">กำลังโหลด...</span>
+        </div>
+        <div id="clock-txt">00:00:00</div>
+    </div>
+
+    <div class="widget-body">
+        <div class="current-class">
+            <div>
+                <div class="badge" id="period-badge">คาบเรียน</div>
+                <div class="subject-title" id="cur-subject">กำลังประมวลผล...</div>
+                <div class="sub-code" id="cur-code">-</div>
+            </div>
+            <div class="meta-info">
+                <span id="cur-teacher">👤 ผู้สอน: -</span>
+                <span id="cur-room">📍 ห้องเรียน: -</span>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="countdown-container">
+                <div class="countdown-label">เหลือเวลาอีก</div>
+                <div class="countdown-timer" id="timer-countdown">00:00</div>
+            </div>
+            <div class="next-class-box">
+                <div class="next-label">คาบต่อไป ➡️</div>
+                <div class="next-name" id="next-subject">ไม่มีเรียน</div>
+                <div class="next-time" id="next-time-range">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ฐานข้อมูลตารางเรียน ม.3/3 ครบถ้วนร้อยเปอร์เซ็นต์
+    const timetable = {
+        1: [ // วันจันทร์
+            { start: "07:40", end: "08:20", name: "กิจกรรมเข้าแถวหน้าเสาธง", code: "กิจกรรมพิเศษ", teacher: "ครูเวรประจำวัน", room: "สนามหน้าเสาธง" },
+            { start: "08:20", end: "09:15", name: "วิชาตะกร้อ", code: "พ23103", teacher: "ครูวัชระ", room: "สนามตะกร้อ" },
+            { start: "09:15", end: "10:10", name: "วิชาคณิตศาสตร์", code: "ค23101", teacher: "ครูเบ็ญจพร", room: "ห้อง 528" },
+            { start: "10:10", end: "11:05", name: "ค้นคว้าอิสระ", code: "IS", teacher: "-", room: "ห้องประจำ 418" },
+            { start: "11:05", end: "12:00", name: "พักรับประทานอาหารกลางวัน", code: "BREAK", teacher: "-", room: "โรงอาหาร" },
+            { start: "12:00", end: "12:55", name: "วิชาสังคมศึกษา/ประวัติศาสตร์", code: "ส23103", teacher: "ครูสโรชา", room: "ห้อง 516" },
+            { start: "12:55", end: "13:50", name: "วิชาภาษาไทย", code: "ท23101", teacher: "ครูมลทิตา", room: "ห้อง 311" },
+            { start: "13:50", end: "14:45", name: "วิชาสังคมศึกษา", code: "ส23101", teacher: "ครูเยาวเรศน์", room: "ห้อง 511" },
+            { start: "14:45", end: "15:40", name: "ค้นคว้าอิสระ", code: "IS", teacher: "-", room: "ห้องประจำ 418" }
+        ],
+        2: [ // วันอังคาร
+            { start: "07:40", end: "08:20", name: "กิจกรรมเข้าแถวหน้าห้องโฮมรูม", code: "กิจกรรมพิเศษ", teacher: "ครูที่ปรึกษา", room: "ห้องประจำ 418" },
+            { start: "08:20", end: "09:15", name: "กิจกรรมอบรมจริยธรรม", code: "กิจกรรมพิเศษ", teacher: "ครูประจำชั้น", room: "ลานกิจกรรม" },
+            { start: "09:15", end: "10:10", name: "วิชาภาษาไทย", code: "ท23101", teacher: "ครูมลทิตา", room: "ห้อง 311" },
+            { start: "10:10", end: "11:05", name: "วิชาวิทยาศาสตร์", code: "ว23101", teacher: "ครูกัญญา", room: "ห้อง 633" },
+            { start: "11:05", end: "12:00", name: "พักรับประทานอาหารกลางวัน", code: "BREAK", teacher: "-", room: "โรงอาหาร" },
+            { start: "12:00", end: "12:55", name: "วิชาสังคมศึกษา", code: "ส23101", teacher: "ครูเยาวเรศน์", room: "ห้อง 514" },
+            { start: "12:55", end: "13:50", name: "วิชาการงานอาชีพ (อุตสาหกรรม 1)", code: "ง23101", teacher: "ครูสุรชัย", room: "โรงฝึกงานอุตสาหกรรม" },
+            { start: "13:50", end: "14:45", name: "วิชาดนตรี", code: "ศ23104", teacher: "ครูชยพล", room: "ห้องดนตรี" },
+            { start: "14:45", end: "15:40", name: "ค้นคว้าอิสระ", code: "IS", teacher: "-", room: "ห้องประจำ 418" }
+        ],
+        3: [ // วันพุธ
+            { start: "07:40", end: "08:20", name: "กิจกรรมเข้าแถวตามเขตพื้นที่", code: "กิจกรรมพิเศษ", teacher: "ครูเวร", room: "เขตพื้นที่รับผิดชอบ" },
+            { start: "08:20", end: "09:15", name: "วิชาสังคมศึกษา", code: "ส23101", teacher: "ครูเยาวเรศน์", room: "ห้อง 414" },
+            { start: "09:15", end: "10:10", name: "วิชาการงานอาชีพเพิ่มเติม (การงาน)", code: "ง20291", teacher: "ไม่ระบุ", room: "ห้องปฏิบัติการ" },
+            { start: "10:10", end: "11:05", name: "วิชาการงานอาชีพเพิ่มเติม (การงาน)", code: "ง20291", teacher: "ไม่ระบุ", room: "ห้องปฏิบัติการ" },
+            { start: "11:05", end: "12:00", name: "พักรับประทานอาหารกลางวัน", code: "BREAK", teacher: "-", room: "โรงอาหาร" },
+            { start: "12:00", end: "12:55", name: "วิชาคณิตศาสตร์", code: "ค23101", teacher: "ครูเบ็ญจพร", room: "ห้อง 528" },
+            { start: "12:55", end: "13:50", name: "วิชาวิทยาศาสตร์", code: "ว23101", teacher: "ครูกัญญา", room: "ห้อง 633" },
+            { start: "13:50", end: "14:45", name: "วิชาวิทยาศาสตร์", code: "ว23101", teacher: "ครูกัญญา", room: "ห้อง 633" },
+            { start: "14:45", end: "15:40", name: "กิจกรรมลูกเสือ / ยุวกาชาด", code: "กิจกรรมพิเศษ", teacher: "ผู้กำกับลูกเสือ", room: "ลานกิจกรรม" }
+        ],
+        4: [ // วันพฤหัสบดี
+            { start: "07:40", end: "08:20", name: "กิจกรรมเข้าแถวหน้าห้องโฮมรูม", code: "กิจกรรมพิเศษ", teacher: "ครูที่ปรึกษา", room: "ห้องประจำ 418" },
+            { start: "08:20", end: "09:15", name: "วิชาคณิตศาสตร์", code: "ค23101", teacher: "ครูเบ็ญจพร", room: "ห้อง 528" },
+            { start: "09:15", end: "10:10", name: "วิชาคอมพิวเตอร์/เทคโนโลยีเพิ่มเติม", code: "ว20290", teacher: "ครูภาสกร", room: "ห้อง 621" },
+            { start: "10:10", end: "11:05", name: "วิชาคอมพิวเตอร์/เทคโนโลยีเพิ่มเติม", code: "ว20290", teacher: "ครูภาสกร", room: "ห้อง 621" },
+            { start: "11:05", end: "12:00", name: "พักรับประทานอาหารกลางวัน", code: "BREAK", teacher: "-", room: "โรงอาหาร" },
+            { start: "12:00", end: "12:55", name: "วิชาสังคมศึกษา", code: "ส23101", teacher: "ครูณัฐวุฒิ", room: "ห้อง 403" },
+            { start: "12:55", end: "13:50", name: "วิชาสุขศึกษา", code: "พ23101", teacher: "ครูวัชระ", room: "ห้อง 425" },
+            { start: "13:50", end: "14:45", name: "วิชาภาษาอังกฤษ", code: "อ23101", teacher: "ครูทรรศน์มน", room: "ห้อง 414" },
+            { start: "14:45", end: "15:40", name: "กิจกรรมชุมนุม", code: "กิจกรรมพิเศษ", teacher: "ครูประจำชุมนุม", room: "ห้องกิจกรรม" }
+        ],
+        5: [ // วันศุกร์
+            { start: "07:40", end: "08:20", name: "กิจกรรมเข้าแถวหน้าเสาธง", code: "กิจกรรมพิเศษ", teacher: "ครูเวรประจำวัน", room: "สนามหน้าเสาธง" },
+            { start: "08:20", end: "09:15", name: "กิจกรรมแนะแนว", code: "ก23901", teacher: "ครูชญาภัทร", room: "ห้อง 421" },
+            { start: "09:15", end: "10:10", name: "วิชาภาษาไทย", code: "ท23101", teacher: "ครูมลทิตา", room: "ห้อง 311" },
+            { start: "10:10", end: "11:05", name: "วิชาภาษาอังกฤษ", code: "อ23101", teacher: "ครูทรรศน์มน", room: "ห้อง 414" },
+            { start: "11:05", end: "12:00", name: "พักรับประทานอาหารกลางวัน", code: "BREAK", teacher: "-", room: "โรงอาหาร" },
+            { start: "12:00", end: "12:55", name: "วิชาวิทยาศาสตร์เพิ่มเติม", code: "ว23104", teacher: "ครูศุภฤกษ์", room: "ห้อง 621" },
+            { start: "12:55", end: "13:50", name: "วิชาคณิตศาสตร์เพิ่มเติม", code: "ค23201", teacher: "ครูเบ็ญจพร", room: "ห้อง 528" },
+            { start: "13:50", end: "14:45", name: "วิชาภาษาอังกฤษ", code: "อ23101", teacher: "ครู Honey", room: "ห้อง 414" },
+            { start: "14:45", end: "15:40", name: "ค้นคว้าอิสระ", code: "IS", teacher: "-", room: "ห้องประจำ 418" }
+        ]
+    };
+
+    const dayNames = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+
+    function updateWidget() {
+        const now = new Date();
+        const currentDay = now.getDay(); 
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentSecond = now.getSeconds();
+
+        // แสดงนาฬิกา Real-time บนหัว Widget
+        document.getElementById("clock-txt").innerText = 
+            `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}:${String(currentSecond).padStart(2, '0')}`;
+        document.getElementById("current-day-txt").innerText = dayNames[currentDay] + " ม.3/3";
+
+        const todayClasses = timetable[currentDay];
+
+        // ถ้าเป็นวันหยุด เสาร์-อาทิตย์
+        if (!todayClasses) {
+            showFreeTime("วันนี้วันหยุดพักผ่อน 🎉");
+            return;
+        }
+
+        const currentTotalSeconds = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
+        let currentClass = null;
+        let nextClass = null;
+
+        // ค้นหาคาบเรียนปัจจุบันและคาบถัดไป
+        for (let i = 0; i < todayClasses.length; i++) {
+            const c = todayClasses[i];
+            const startSec = parseTimeToSeconds(c.start);
+            const endSec = parseTimeToSeconds(c.end);
+
+            if (currentTotalSeconds >= startSec && currentTotalSeconds < endSec) {
+                currentClass = c;
+                nextClass = todayClasses[i + 1] || null;
+                break;
+            }
+        }
+
+        // กรณีที่ไม่มีคาบเรียนตรงกับเวลาปัจจุบัน (เช่น เช้าเกินไป หรือเลิกเรียนแล้ว)
+        if (!currentClass) {
+            const firstClassStart = parseTimeToSeconds(todayClasses[0].start);
+            const lastClassEnd = parseTimeToSeconds(todayClasses[todayClasses.length - 1].end);
+
+            if (currentTotalSeconds < firstClassStart) {
+                // ก่อนเข้าแถวตอนเช้า
+                document.getElementById("cur-subject").innerText = "เตรียมตัวเข้าแถว";
+                document.getElementById("cur-code").innerText = "ม.3/3 ห้อง 418";
+                document.getElementById("cur-teacher").innerText = "โรงเรียนสา";
+                document.getElementById("cur-room").innerText = "ตารางเรียนภาค 1/2569";
+                document.getElementById("period-badge").innerText = "ตอนเช้า";
+                
+                nextClass = todayClasses[0];
+                const diff = firstClassStart - currentTotalSeconds;
+                document.getElementById("timer-countdown").innerText = formatCountdown(diff);
+            } else if (currentTotalSeconds >= lastClassEnd) {
+                // หลังเลิกเรียน
+                showFreeTime("หมดคาบเรียนของวันนี้แล้ว ✨");
+                return;
+            } else {
+                // ช่วงรอยต่อเปลี่ยนคาบสั้นๆ (ถ้ามี)
+                for (let i = 0; i < todayClasses.length - 1; i++) {
+                    const endThis = parseTimeToSeconds(todayClasses[i].end);
+                    const startNext = parseTimeToSeconds(todayClasses[i + 1].start);
+                    if (currentTotalSeconds >= endThis && currentTotalSeconds < startNext) {
+                        document.getElementById("cur-subject").innerText = "กำลังเปลี่ยนคาบเรียน";
+                        document.getElementById("cur-code").innerText = "เปลี่ยนห้องเรียน";
+                        document.getElementById("cur-teacher").innerText = "-";
+                        document.getElementById("cur-room").innerText = "-";
+                        document.getElementById("period-badge").innerText = "ย้ายคาบ";
+                        
+                        nextClass = todayClasses[i + 1];
+                        const diff = startNext - currentTotalSeconds;
+                        document.getElementById("timer-countdown").innerText = formatCountdown(diff);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ทำการแสดงผลบน UI เมื่อเจอคาบเรียน
+        if (currentClass) {
+            document.getElementById("cur-subject").innerText = currentClass.name;
+            document.getElementById("cur-code").innerText = currentClass.code;
+            document.getElementById("cur-teacher").innerText = currentClass.teacher !== "-" ? `👤 ผู้สอน: ${currentClass.teacher}` : "👤 ผู้สอน: -";
+            document.getElementById("cur-room").innerText = currentClass.room !== "-" ? `📍 ห้องเรียน: ${currentClass.room}` : "📍 ห้องเรียน: -";
+            document.getElementById("period-badge").innerText = currentClass.code === "BREAK" ? "พักเบรก" : "กำลังเรียน";
+
+            // คำนวณเวลานับถอยหลังหมดคาบ
+            const endSec = parseTimeToSeconds(currentClass.end);
+            const remainingSeconds = endSec - currentTotalSeconds;
+            document.getElementById("timer-countdown").innerText = formatCountdown(remainingSeconds);
+            document.getElementById("timer-countdown").style.color = remainingSeconds < 300 ? "#ff4b4b" : "#00ff88"; // ต่ำกว่า 5 นาทีขึ้นสีแดง
+        }
+
+        // แสดงผลคาบต่อไปในกล่องเล็กๆ ด้านข้าง
+        if (nextClass) {
+            document.getElementById("next-subject").innerText = nextClass.name;
+            document.getElementById("next-time-range").innerText = `${nextClass.start} น.`;
+        } else {
+            document.getElementById("next-subject").innerText = "ไม่มีคาบต่อไป";
+            document.getElementById("next-time-range").innerText = "กลับบ้าน";
+        }
+    }
+
+    // แปลงเวลา "HH:MM" ให้เป็นหน่วยวินาทีรวมของวัน เพื่อใช้คำนวณเรียลไทม์
+    function parseTimeToSeconds(timeStr) {
+        const [h, m] = timeStr.split(':').map(Number);
+        return (h * 3600) + (m * 60);
+    }
+
+    // แปลงวินาทีที่เหลืออยู่ให้เป็น "นาที:วินาที" บนหน้าจอ
+    function formatCountdown(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // สั่งเซ็ตข้อมูลล้างหน้าจอเวลากลางคืนหรือวันหยุด
+    function showFreeTime(message) {
+        document.getElementById("cur-subject").innerText = message;
+        document.getElementById("cur-code").innerText = "พักผ่อนตามอัธยาศัย";
+        document.getElementById("cur-teacher").innerText = "👤 ผู้สอน: -";
+        document.getElementById("cur-room").innerText = "📍 ห้องเรียน: -";
+        document.getElementById("period-badge").innerText = "FREE";
+        document.getElementById("timer-countdown").innerText = "--:--";
+        document.getElementById("timer-countdown").style.color = "rgba(255,255,255,0.3)";
+        document.getElementById("next-subject").innerText = "ไม่มีเรียน";
+        document.getElementById("next-time-range").innerText = "-";
+    }
+
+    // เริ่มทำงานทันทีและสั่งรีเฟรชทุกๆ 1 วินาที เพื่อให้นาฬิกาเดินตรงเป๊ะ
+    updateWidget();
+    setInterval(updateWidget, 1000);
+</script>
+
+</body>
+</html>
+
